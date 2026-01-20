@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heating Impact Analysis Tool | CIBSE CP1 Compliant</title>
+    <meta name="description" content="Professional tool for analysing HIU retrofit performance against UK building standards">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --critical: #dc2626;
+            --dark: #0f172a;
+            --darker: #020617;
+            --light: #f8fafc;
+            --gray: #cbd5e1;
+            --gray-dark: #475569;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.25);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        /* ===== Reset & Base Styles ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: var(--light);
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ===== Typography ===== */
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            color: var(--light);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--gray);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--gray);
+        }
+
+        small {
+            font-size: 0.875rem;
+            color: var(--gray-dark);
+        }
+
+        code {
+            background: var(--darker);
+            color: var(--warning);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        /* ===== Header ===== */
+        header {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .icon {
+            font-size: 3rem;
+            color: var(--primary);
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+            max-width: 800px;
+        }
+
+        /* ===== Cards ===== */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 10px var(--shadow);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        /* ===== Form Elements ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--darker);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--light);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        input[type="number"] {
+            text-align: center;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-dark);
+        }
+
+        .input-with-icon input {
+            padding-left: 2.5rem;
+        }
+
+        /* ===== Buttons ===== */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--gray);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* ===== KPI Cards ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .kpi-card {
+            background: var(--darker);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .kpi-card.warning {
+            border-left-color: var(--warning);
+        }
+
+        .kpi-card.danger {
+            border-left-color: var(--danger);
+        }
+
+        .kpi-card.success {
+            border-left-color: var(--success);
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--light);
+        }
+
+        .kpi-unit {
+            font-size: 1rem;
+            color: var(--gray-dark);
+            margin-left: 0.25rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-ok { background-color: var(--success); }
+        .status-warning { background-color: var(--warning); }
+        .status-danger { background-color: var(--danger); }
+        .status-critical { background-color: var(--critical); }
+
+        /* ===== Charts ===== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 1100px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            background: var(--darker);
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: 300px;
+        }
+
+        /* ===== Compliance List ===== */
+        .compliance-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .compliance-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--darker);
+            border-radius: 6px;
+            border-left: 4px solid var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .compliance-item.compliant {
+            border-left-color: var(--success);
+        }
+
+        .compliance-item.non-compliant {
+            border-left-color: var(--danger);
+        }
+
+        .compliance-item i {
+            font-size: 1.25rem;
+        }
+
+        .compliance-item.compliant i {
+            color: var(--success);
+        }
+
+        .compliance-item.non-compliant i {
+            color: var(--danger);
+        }
+
+        /* ===== Toggle Sections ===== */
+        .toggle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 1rem;
+            background: var(--darker);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .toggle-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .toggle-content.expanded {
+            max-height: 2000px;
+        }
+
+        /* ===== Footer ===== */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray-dark);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        /* ===== Responsive Design ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ===== Print Styles ===== */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+
+            .card {
+                break-inside: avoid;
+                border: 1px solid #ddd;
+            }
+
+            .btn, .toggle-header {
+                display: none;
+            }
+
+            .toggle-content {
+                max-height: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <i class="fas fa-fire icon"></i>
+                <div>
+                    <h1>Heating Impact Analysis Tool</h1>
+                    <p class="subtitle">Professional analysis of HIU retrofit performance against UK building standards (CIBSE CP1, BS EN 12831-1, BS 6700)</p>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="calculate()">
+                    <i class="fas fa-calculator"></i> Calculate Performance
+                </button>
+                <button class="btn btn-outline" onclick="generateReport()">
+                    <i class="fas fa-file-pdf"></i> Generate Report
+                </button>
+                <button class="btn btn-outline" onclick="saveConfiguration()">
+                    <i class="fas fa-save"></i> Save Configuration
+                </button>
+                <button class="btn btn-outline" onclick="resetToDefaults()">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+        </header>
+
+        <!-- System Configuration -->
+        <div class="card">
+            <div class="toggle-header" onclick="toggleSection('configuration')">
+                <h2><i class="fas fa-cog"></i> System Configuration</h2>
+                <i class="fas fa-chevron-down" id="config-icon"></i>
+            </div>
+            <div class="toggle-content" id="configuration">
+                <div class="form-grid">
+                    <!-- Temperature Settings -->
+                    <div class="form-group">
+                        <label><i class="fas fa-thermometer-half"></i> Design Flow/Return (°C)</label>
+                        <div class="input-group">
+                            <div class="input-with-icon" style="flex: 1;">
+                                <i class="fas fa-arrow-up"></i>
+                                <input type="number" id="flowDesign" value="75" step="0.5" min="40" max="90">
+                            </div>
+                            <div class="input-with-icon" style="flex: 1;">
+                                <i class="fas fa-arrow-down"></i>
+                                <input type="number" id="retDesign" value="50" step="0.5" min="30" max="80">
+                            </div>
+                        </div>
+                        <small>Original system design temperatures</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-temperature-high"></i> Target Flow/Return (°C)</label>
+                        <div class="input-group">
+                            <div class="input-with-icon" style="flex: 1;">
+                                <i class="fas fa-arrow-up"></i>
+                                <input type="number" id="flowTarget" value="60" step="0.5" min="30" max="90">
+                            </div>
+                            <div class="input-with-icon" style="flex: 1;">
+                                <i class="fas fa-arrow-down"></i>
+                                <input type="number" id="retTarget" value="40" step="0.5" min="20" max="80">
+                            </div>
+                        </div>
+                        <small>Proposed HIU operating temperatures</small>
+                    </div>
+
+                    <!-- Environmental Settings -->
+                    <div class="form-group">
+                        <label><i class="fas fa-home"></i> Room Setpoint (°C)</label>
+                        <select id="tRoom">
+                            <option value="21">21°C (Standard)</option>
+                            <option value="20">20°C</option>
+                            <option value="18">18°C (Minimum H&S)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-snowflake"></i> Design Outdoor Temperature (°C)</label>
+                        <input type="number" id="tOATdesign" value="-3" step="0.1" min="-10" max="10">
+                        <small>Worst-case winter design temperature</small>
+                    </div>
+
+                    <!-- System Parameters -->
+                    <div class="form-group">
+                        <label><i class="fas fa-bolt"></i> Total Heat Load at Design (kW)</label>
+                        <input type="number" id="qkW" value="12" step="0.1" min="1" max="100">
+                        <small>Building heat loss at design conditions</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-tachometer-alt"></i> Available Pump Head (m)</label>
+                        <input type="number" id="headAvail" value="4" step="0.1" min="1" max="20">
+                        <small>HIU pump capability</small>
+                    </div>
+
+                    <!-- Advanced Settings Toggle -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <div class="toggle-header" onclick="toggleSection('advanced')" style="margin-bottom: 0;">
+                            <h3><i class="fas fa-sliders-h"></i> Advanced Settings</h3>
+                            <i class="fas fa-chevron-down" id="advanced-icon"></i>
+                        </div>
+                        <div class="toggle-content" id="advanced" style="margin-top: 1rem;">
+                            <div class="form-grid">
+                                <!-- Pipework Settings -->
+                                <div class="form-group">
+                                    <label>Pipe Size & Material</label>
+                                    <div class="input-group">
+                                        <select id="pipeSize">
+                                            <option value="10">10 mm</option>
+                                            <option value="15">15 mm</option>
+                                            <option value="22">22 mm</option>
+                                        </select>
+                                        <select id="pipeMat">
+                                            <option value="hep2o">Hep2O</option>
+                                            <option value="polypipe">Polypipe</option>
+                                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Run Length per Branch (m)</label>
+                                    <input type="number" id="runLen" value="3.5" step="0.1" min="1" max="50">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Equivalent Length Multiplier</label>
+                                    <input type="number" id="eqMult" value="1.6" step="0.1" min="1" max="3">
+                                    <small>Accounts for fittings and manifolds</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Branches in Service</label>
+                                    <input type="number" id="nBranches" value="4" step="1" min="1" max="20">
+                                    <small>Radiators operating concurrently</small>
+                                </div>
+
+                                <!-- Radiator Settings -->
+                                <div class="form-group">
+                                    <label>Radiator Exponent (n)</label>
+                                    <input type="number" id="radExp" value="1.3" step="0.05" min="1" max="1.5">
+                                    <small>Heat output ∝ ΔT<sup>n</sup> (1.3 for panel radiators)</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Building Thermal Mass (kJ/K)</label>
+                                    <input type="number" id="thermalMass" value="18000" step="100" min="5000" max="50000">
+                                    <small>Affects warm-up times</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preset Buttons -->
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="applyPreset('realWorld')">
+                        <i class="fas fa-industry"></i> 60/50°C "Real World"
+                    </button>
+                    <button class="btn btn-secondary" onclick="applyPreset('sap')">
+                        <i class="fas fa-file-contract"></i> SAP Defaults (18°C @ -1.3°C)
+                    </button>
+                    <button class="btn btn-secondary" onclick="applyPreset('worstCase')">
+                        <i class="fas fa-exclamation-triangle"></i> Worst Case (50/30°C)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Results -->
+        <div class="card">
+            <h2><i class="fas fa-chart-line"></i> Performance Analysis</h2>
+            
+            <!-- KPI Grid -->
+            <div class="kpi-grid">
+                <div class="kpi-card" id="radiator-output">
+                    <div class="kpi-label">
+                        <span class="status-dot" id="rad-status"></span>
+                        Radiator Output
+                    </div>
+                    <div class="kpi-value">--<span class="kpi-unit">%</span></div>
+                    <small>At target temperatures vs design</small>
+                </div>
+
+                <div class="kpi-card" id="flow-requirement">
+                    <div class="kpi-label">
+                        <i class="fas fa-tint"></i> Required Flow Rate
+                    </div>
+                    <div class="kpi-value">--<span class="kpi-unit">L/s</span></div>
+                    <small>Total system flow requirement</small>
+                </div>
+
+                <div class="kpi-card" id="pump-status">
+                    <div class="kpi-label">
+                        <span class="status-dot" id="pump-status-dot"></span>
+                        Pump Head Status
+                    </div>
+                    <div class="kpi-value">--<span class="kpi-unit">m</span></div>
+                    <small>Required vs Available</small>
+                </div>
+
+                <div class="kpi-card" id="max-temp">
+                    <div class="kpi-label">
+                        <span class="status-dot" id="temp-status"></span>
+                        Maximum Achievable
+                    </div>
+                    <div class="kpi-value">--<span class="kpi-unit">°C</span></div>
+                    <small>At design outdoor temperature</small>
+                </div>
+
+                <div class="kpi-card" id="struggle-point">
+                    <div class="kpi-label">
+                        <i class="fas fa-thermometer-empty"></i> Struggle Point
+                    </div>
+                    <div class="kpi-value">--<span class="kpi-unit">°C</span></div>
+                    <small>OAT where system begins to fail</small>
+                </div>
+
+                <div class="kpi-card" id="warmup-time">
+                    <div class="kpi-label">
+                        <i class="fas fa-clock"></i> Warm-up Time
+                    </div>
+                    <div class="kpi-value">--</div>
+                    <small>From 16°C to setpoint</small>
+                </div>
+            </div>
+
+            <!-- Detailed Metrics -->
+            <div style="margin-top: 2rem;">
+                <h3>Detailed Performance Metrics</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Design Heat Loss</label>
+                        <div class="kpi-value" id="design-heat-loss">-- kW</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Heating Capacity</label>
+                        <div class="kpi-value" id="available-capacity">-- kW</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Capacity Ratio</label>
+                        <div class="kpi-value" id="capacity-ratio">--</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Heat Deficit at Design</label>
+                        <div class="kpi-value" id="heat-deficit">-- kW</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="card">
+            <h2><i class="fas fa-chart-bar"></i> Visual Analysis</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <canvas id="outputChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standards Compliance -->
+        <div class="card">
+            <h2><i class="fas fa-gavel"></i> Standards Compliance</h2>
+            <ul class="compliance-list" id="compliance-list">
+                <!-- Will be populated by JavaScript -->
+            </ul>
+            
+            <div style="margin-top: 2rem;">
+                <h3>Key Standards References</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>CIBSE/ADE CP1:2020</label>
+                        <p>Heat Networks Code of Practice - Primary design standard</p>
+                    </div>
+                    <div class="form-group">
+                        <label>BS EN 12831-1:2017</label>
+                        <p>Heat load calculation methodology</p>
+                    </div>
+                    <div class="form-group">
+                        <label>BS 6700:2006</label>
+                        <p>Hydraulic design requirements</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Building Regulations Part L1A</label>
+                        <p>Conservation of fuel and power</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Heating Impact Analysis Tool v1.0 | Based on UK Building Standards and CIBSE CP1:2020</p>
+            <p>This tool is for professional analysis. Always consult qualified engineers for critical applications.</p>
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-book"></i> Documentation</a>
+                <a href="#"><i class="fas fa-question-circle"></i> Help</a>
+                <a href="#"><i class="fas fa-bug"></i> Report Issues</a>
+                <a href="#"><i class="fas fa-code"></i> View Source</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ===== GLOBAL VARIABLES =====
+        let outputChart = null;
+        let tempChart = null;
+        let currentConfig = {};
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved configuration
+            const savedConfig = localStorage.getItem('heatingToolConfig');
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    loadConfiguration(config);
+                } catch (e) {
+                    console.error('Error loading saved config:', e);
+                }
+            }
+
+            // Calculate initial results
+            calculate();
+        });
+
+        // ===== CORE CALCULATION FUNCTIONS =====
+        function calculate() {
+            // Save current configuration
+            saveCurrentConfig();
+
+            // Get input values
+            const inputs = getInputs();
+            
+            // Perform calculations
+            const results = performCalculations(inputs);
+            
+            // Update UI with results
+            updateUI(results, inputs);
+            
+            // Update charts
+            updateCharts(results, inputs);
+            
+            // Update compliance checklist
+            updateComplianceChecklist(results, inputs);
+        }
+
+        function getInputs() {
+            return {
+                // Temperature inputs
+                flowDesign: parseFloat(document.getElementById('flowDesign').value),
+                retDesign: parseFloat(document.getElementById('retDesign').value),
+                flowTarget: parseFloat(document.getElementById('flowTarget').value),
+                retTarget: parseFloat(document.getElementById('retTarget').value),
+                tRoom: parseFloat(document.getElementById('tRoom').value),
+                tOATdesign: parseFloat(document.getElementById('tOATdesign').value),
+                
+                // System parameters
+                qkW: parseFloat(document.getElementById('qkW').value),
+                headAvail: parseFloat(document.getElementById('headAvail').value),
+                thermalMass: parseFloat(document.getElementById('thermalMass').value),
+                
+                // Pipework parameters
+                pipeSize: document.getElementById('pipeSize').value,
+                pipeMat: document.getElementById('pipeMat').value,
+                runLen: parseFloat(document.getElementById('runLen').value),
+                eqMult: parseFloat(document.getElementById('eqMult').value),
+                nBranches: parseInt(document.getElementById('nBranches').value),
+                
+                // Radiator parameters
+                radExp: parseFloat(document.getElementById('radExp').value)
+            };
+        }
+
+        function performCalculations(inputs) {
+            const results = {};
+            
+            // Calculate mean water temperatures
+            const TmeanDesign = (inputs.flowDesign + inputs.retDesign) / 2;
+            const TmeanTarget = (inputs.flowTarget + inputs.retTarget) / 2;
+            
+            // Calculate ΔT for flow rates
+            const dTdesign = inputs.flowDesign - inputs.retDesign;
+            const dTtarget = inputs.flowTarget - inputs.retTarget;
+            
+            // Calculate radiator output at 21°C reference
+            const dTradDesign = Math.max(TmeanDesign - 21, 0.1);
+            const dTradTarget = Math.max(TmeanTarget - 21, 0.1);
+            const radFrac = Math.pow(dTradTarget / dTradDesign, inputs.radExp);
+            results.radiatorOutputPercent = radFrac * 100;
+            
+            // Calculate flow rates
+            results.flowDesign = inputs.qkW / (4.186 * dTdesign);
+            results.flowTarget = inputs.qkW / (4.186 * dTtarget);
+            
+            // Calculate available capacity
+            results.availableCapacity = inputs.qkW * radFrac;
+            
+            // Calculate maximum achievable temperature (iterative)
+            results.maxAchievableTemp = calculateMaxTemperature(inputs, radFrac);
+            
+            // Calculate struggle point
+            results.strugglePoint = calculateStrugglePoint(inputs, radFrac);
+            
+            // Calculate warm-up time
+            results.warmupTime = calculateWarmupTime(inputs, radFrac);
+            
+            // Calculate hydraulic requirements
+            const hydraulic = calculateHydraulics(inputs, results.flowTarget);
+            results.requiredHead = hydraulic.requiredHead;
+            results.pumpStatus = hydraulic.pumpStatus;
+            results.headRatio = hydraulic.headRatio;
+            
+            // Additional metrics
+            results.capacityRatio = radFrac;
+            results.heatDeficit = Math.max(0, inputs.qkW - results.availableCapacity);
+            
+            return results;
+        }
+
+        function calculateMaxTemperature(inputs, radFrac) {
+            // Simplified calculation - in reality would use iterative approach
+            const designDelta = inputs.tRoom - inputs.tOATdesign;
+            const achievableDelta = designDelta * radFrac;
+            return inputs.tOATdesign + achievableDelta;
+        }
+
+        function calculateStrugglePoint(inputs, radFrac) {
+            // Outdoor temperature where system can no longer maintain setpoint
+            const tempDiff = inputs.tRoom - inputs.tOATdesign;
+            return inputs.tRoom - (radFrac * tempDiff);
+        }
+
+        function calculateWarmupTime(inputs, radFrac) {
+            const capacityRatio = radFrac;
+            
+            if (capacityRatio >= 1.0) {
+                const baseTime = 75; // minutes for design system
+                const effectiveCapacity = Math.min(capacityRatio, 1.5);
+                const minTime = Math.round(baseTime / effectiveCapacity);
+                const maxTime = Math.round(1.3 * baseTime / effectiveCapacity);
+                return `${minTime}-${maxTime} min`;
+            } else if (capacityRatio >= 0.8) {
+                return "90-120 min";
+            } else if (capacityRatio >= 0.6) {
+                return "2-3 hours";
+            } else if (capacityRatio >= 0.4) {
+                return "4+ hours";
+            } else {
+                return "Unlikely to reach setpoint";
+            }
+        }
+
+        function calculateHydraulics(inputs, totalFlow) {
+            // Simplified hydraulic calculation
+            const flowPerBranch = totalFlow / inputs.nBranches;
+            const baseResistance = getPipeResistance(inputs.pipeSize, inputs.pipeMat);
+            const equivalentLength = inputs.runLen * inputs.eqMult;
+            
+            // Calculate pressure drop (simplified)
+            const pressureDrop = baseResistance * equivalentLength * Math.pow(flowPerBranch / 0.035, 2);
+            const requiredHead = pressureDrop / 9807 + 0.5; // Add 0.5m for HIU internal
+            
+            const headRatio = requiredHead / inputs.headAvail;
+            
+            let pumpStatus = 'adequate';
+            if (headRatio > 1.2) pumpStatus = 'critical';
+            else if (headRatio > 1.0) pumpStatus = 'marginal';
+            
+            return {
+                requiredHead: requiredHead,
+                pumpStatus: pumpStatus,
+                headRatio: headRatio
+            };
+        }
+
+        function getPipeResistance(size, material) {
+            // Resistance in Pa/m at reference flow
+            const resistances = {
+                '10': { hep2o: 1500, polypipe: 2400, custom: 2000 },
+                '15': { hep2o: 400, polypipe: 650, custom: 500 },
+                '22': { hep2o: 120, polypipe: 200, custom: 150 }
+            };
+            return resistances[size]?.[material] || 1000;
+        }
+
+        // ===== UI UPDATE FUNCTIONS =====
+        function updateUI(results, inputs) {
+            // Update KPI cards
+            updateKPI('radiator-output', 
+                `${results.radiatorOutputPercent.toFixed(0)}%`,
+                getStatusClass(results.radiatorOutputPercent, [80, 65])
+            );
+            
+            updateKPI('flow-requirement',
+                `${results.flowTarget.toFixed(3)} L/s`,
+                'info'
+            );
+            
+            updateKPI('pump-status',
+                `${results.requiredHead.toFixed(2)} / ${inputs.headAvail.toFixed(1)} m`,
+                results.pumpStatus
+            );
+            
+            updateKPI('max-temp',
+                `${results.maxAchievableTemp.toFixed(1)}°C`,
+                getTempStatusClass(results.maxAchievableTemp, inputs.tRoom)
+            );
+            
+            updateKPI('struggle-point',
+                `${results.strugglePoint.toFixed(1)}°C`,
+                getStruggleStatusClass(results.strugglePoint)
+            );
+            
+            updateKPI('warmup-time',
+                results.warmupTime,
+                getWarmupStatusClass(results.capacityRatio)
+            );
+            
+            // Update detailed metrics
+            document.getElementById('design-heat-loss').textContent = `${inputs.qkW.toFixed(1)} kW`;
+            document.getElementById('available-capacity').textContent = `${results.availableCapacity.toFixed(1)} kW`;
+            document.getElementById('capacity-ratio').textContent = results.capacityRatio.toFixed(2);
+            document.getElementById('heat-deficit').textContent = `${results.heatDeficit.toFixed(1)} kW`;
+            
+            // Update status dots
+            updateStatusDot('rad-status', results.radiatorOutputPercent, [80, 65]);
+            updateStatusDot('pump-status-dot', results.headRatio, [1.0, 1.2], true);
+            updateStatusDot('temp-status', results.maxAchievableTemp, [inputs.tRoom, 18]);
+        }
+
+        function updateKPI(cardId, value, statusClass) {
+            const card = document.getElementById(cardId);
+            const valueElement = card.querySelector('.kpi-value');
+            
+            // Update classes
+            card.className = 'kpi-card';
+            if (statusClass) {
+                card.classList.add(statusClass);
+            }
+            
+            // Update value
+            const parts = value.split(' ');
+            if (parts.length > 1) {
+                valueElement.innerHTML = `${parts[0]} <span class="kpi-unit">${parts.slice(1).join(' ')}</span>`;
+            } else {
+                valueElement.innerHTML = value;
+            }
+        }
+
+        function getStatusClass(value, thresholds) {
+            if (value >= thresholds[0]) return 'success';
+            if (value >= thresholds[1]) return 'warning';
+            return 'danger';
+        }
+
+        function getTempStatusClass(achievable, setpoint) {
+            if (achievable >= setpoint) return 'success';
+            if (achievable >= 18) return 'warning';
+            return 'danger';
+        }
+
+        function getStruggleStatusClass(strugglePoint) {
+            if (strugglePoint <= 0) return 'success';
+            if (strugglePoint <= 5) return 'warning';
+            return 'danger';
+        }
+
+        function getWarmupStatusClass(capacityRatio) {
+            if (capacityRatio >= 1.0) return 'success';
+            if (capacityRatio >= 0.8) return 'warning';
+            if (capacityRatio >= 0.6) return 'danger';
+            return 'critical';
+        }
+
+        function updateStatusDot(dotId, value, thresholds, invert = false) {
+            const dot = document.getElementById(dotId);
+            let status = 'danger';
+            
+            if (invert) {
+                // For pump head ratio, lower is better
+                if (value <= thresholds[0]) status = 'success';
+                else if (value <= thresholds[1]) status = 'warning';
+            } else {
+                // For most metrics, higher is better
+                if (value >= thresholds[0]) status = 'success';
+                else if (value >= thresholds[1]) status = 'warning';
+            }
+            
+            dot.className = 'status-dot';
+            dot.classList.add(`status-${status}`);
+        }
+
+        // ===== CHART FUNCTIONS =====
+        function updateCharts(results, inputs) {
+            updateOutputChart(results, inputs);
+            updateTemperatureChart(results, inputs);
+        }
+
+        function updateOutputChart(results, inputs) {
+            const ctx = document.getElementById('outputChart').getContext('2d');
+            
+            const data = {
+                labels: [`${inputs.flowDesign}/${inputs.retDesign}°C`, `${inputs.flowTarget}/${inputs.retTarget}°C`],
+                datasets: [{
+                    label: 'Radiator Output (%)',
+                    data: [100, results.radiatorOutputPercent],
+                    backgroundColor: [
+                        'rgba(37, 99, 235, 0.8)',
+                        results.radiatorOutputPercent >= 80 ? 'rgba(16, 185, 129, 0.8)' :
+                        results.radiatorOutputPercent >= 65 ? 'rgba(245, 158, 11, 0.8)' :
+                        'rgba(239, 68, 68, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(37, 99, 235, 1)',
+                        results.radiatorOutputPercent >= 80 ? 'rgba(16, 185, 129, 1)' :
+                        results.radiatorOutputPercent >= 65 ? 'rgba(245, 158, 11, 1)' :
+                        'rgba(239, 68, 68, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            };
+            
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Output: ${context.parsed.y.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 110,
+                            title: {
+                                display: true,
+                                text: 'Output (%)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            };
+            
+            if (outputChart) {
+                outputChart.data = data;
+                outputChart.update();
+            } else {
+                outputChart = new Chart(ctx, config);
+            }
+        }
+
+        function updateTemperatureChart(results, inputs) {
+            const ctx = document.getElementById('tempChart').getContext('2d');
+            
+            const temperatures = [
+                inputs.tRoom, // Setpoint
+                results.maxAchievableTemp, // Achievable
+                results.strugglePoint, // Struggle point
+                inputs.tOATdesign // Design OAT
+            ];
+            
+            const labels = ['Setpoint', 'Max Achievable', 'Struggle OAT', 'Design OAT'];
+            const colors = [
+                'rgba(37, 99, 235, 0.8)',
+                results.maxAchievableTemp >= inputs.tRoom ? 'rgba(16, 185, 129, 0.8)' :
+                results.maxAchievableTemp >= 18 ? 'rgba(245, 158, 11, 0.8)' :
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(100, 116, 139, 0.8)'
+            ];
+            
+            const data = {
+                labels: labels,
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: temperatures,
+                    backgroundColor: colors,
+                    borderColor: colors.map(color => color.replace('0.8', '1')),
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            };
+            
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed.y.toFixed(1)}°C`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            };
+            
+            if (tempChart) {
+                tempChart.data = data;
+                tempChart.update();
+            } else {
+                tempChart = new Chart(ctx, config);
+            }
+        }
+
+        // ===== COMPLIANCE CHECKLIST =====
+        function updateComplianceChecklist(results, inputs) {
+            const checklist = document.getElementById('compliance-list');
+            checklist.innerHTML = '';
+            
+            const checks = [
+                {
+                    id: 'radiator-output',
+                    label: `Radiator output ≥80% at target temperatures`,
+                    check: () => results.radiatorOutputPercent >= 80,
+                    standard: 'CIBSE CP1:2020 Section 4.3.2'
+                },
+                {
+                    id: 'temperature-achievement',
+                    label: `Can maintain ${inputs.tRoom}°C at design OAT`,
+                    check: () => results.maxAchievableTemp >= inputs.tRoom,
+                    standard: 'BS EN 12831-1:2017'
+                },
+                {
+                    id: 'minimum-temperature',
+                    label: `Can maintain minimum 18°C at design OAT`,
+                    check: () => results.maxAchievableTemp >= 18,
+                    standard: 'Heating & Hotwater in Buildings Act 2022'
+                },
+                {
+                    id: 'pump-head',
+                    label: `Pump head adequate for system resistance`,
+                    check: () => results.pumpStatus === 'adequate',
+                    standard: 'BS 6700:2006 Section 8.2'
+                },
+                {
+                    id: 'struggle-point',
+                    label: `System functional below 0°C outdoor temperature`,
+                    check: () => results.strugglePoint <= 0,
+                    standard: 'CIBSE CP1:2020 Section 4.3.2'
+                },
+                {
+                    id: 'flow-temperature',
+                    label: `Flow temperature appropriate for existing emitters`,
+                    check: () => inputs.flowTarget >= 60,
+                    standard: 'Manufacturer guidelines'
+                }
+            ];
+            
+            checks.forEach(check => {
+                const isCompliant = check.check();
+                const item = document.createElement('li');
+                item.className = `compliance-item ${isCompliant ? 'compliant' : 'non-compliant'}`;
+                item.innerHTML = `
+                    <i class="fas fa-${isCompliant ? 'check-circle' : 'exclamation-circle'}"></i>
+                    <div>
+                        <strong>${check.label}</strong>
+                        <div style="font-size: 0.85rem; color: var(--gray-dark); margin-top: 0.25rem;">
+                            ${check.standard}
+                        </div>
+                    </div>
+                `;
+                checklist.appendChild(item);
+            });
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const icon = document.getElementById(`${sectionId}-icon`);
+            
+            content.classList.toggle('expanded');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+
+        function applyPreset(preset) {
+            switch(preset) {
+                case 'realWorld':
+                    document.getElementById('flowTarget').value = 60;
+                    document.getElementById('retTarget').value = 50;
+                    break;
+                case 'sap':
+                    document.getElementById('tRoom').value = 18;
+                    document.getElementById('tOATdesign').value = -1.3;
+                    break;
+                case 'worstCase':
+                    document.getElementById('flowTarget').value = 50;
+                    document.getElementById('retTarget').value = 30;
+                    break;
+            }
+            calculate();
+        }
+
+        function saveCurrentConfig() {
+            const inputs = getInputs();
+            currentConfig = inputs;
+        }
+
+        function saveConfiguration() {
+            saveCurrentConfig();
+            localStorage.setItem('heatingToolConfig', JSON.stringify(currentConfig));
+            showNotification('Configuration saved successfully!', 'success');
+        }
+
+        function loadConfiguration(config) {
+            for (const key in config) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = config[key];
+                }
+            }
+        }
+
+        function resetToDefaults() {
+            if (confirm('Reset all values to defaults?')) {
+                localStorage.removeItem('heatingToolConfig');
+                location.reload();
+            }
+        }
+
+        function generateReport() {
+            const inputs = getInputs();
+            const results = performCalculations(inputs);
+            
+            const report = {
+                timestamp: new Date().toISOString(),
+                configuration: inputs,
+                results: results,
+                compliance: getComplianceSummary(results, inputs)
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `heating-analysis-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Report generated successfully!', 'success');
+        }
+
+        function getComplianceSummary(results, inputs) {
+            return {
+                radiatorOutput: results.radiatorOutputPercent >= 80 ? 'Compliant' : 'Non-compliant',
+                temperatureAchievement: results.maxAchievableTemp >= inputs.tRoom ? 'Compliant' : 'Non-compliant',
+                minimumTemperature: results.maxAchievableTemp >= 18 ? 'Compliant' : 'Non-compliant',
+                pumpHead: results.pumpStatus === 'adequate' ? 'Compliant' : 'Non-compliant',
+                strugglePoint: results.strugglePoint <= 0 ? 'Compliant' : 'Non-compliant'
+            };
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add styles
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'var(--success)' : 'var(--primary)'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+            
+            // Add animation keyframes
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // ===== EXPORT FUNCTIONS FOR GLOBAL ACCESS =====
+        window.calculate = calculate;
+        window.generateReport = generateReport;
+        window.saveConfiguration = saveConfiguration;
+        window.resetToDefaults = resetToDefaults;
+        window.applyPreset = applyPreset;
+        window.toggleSection = toggleSection;
+    </script>
+</body>
+</html>
